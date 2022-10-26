@@ -5,6 +5,8 @@ pygame.init()
 
 game = pygame.display.set_mode((600, 602))
 pygame.display.set_caption("Alquerque")
+pionN = pygame.image.load("Image/pion1.png")
+pionB = pygame.image.load("Image/pion2.png")
 
 
 # ---------------------------------------------------------------------------------------------------------
@@ -45,10 +47,10 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------------------------------------
 
 tableau = [[Player(2), Player(2), Player(2), Player(2), Player(2)],
-           [Player(2), Player(2), Player(2), Player(2), Player(2)],
-           [Player(2), Player(2), Player(0), Player(1), Player(1)],
-           [Player(1), Player(1), Player(1), Player(1), Player(1)],
-           [Player(1), Player(1), Player(1), Player(1), Player(1)]]
+            [Player(2), Player(2), Player(2), Player(2), Player(2)],
+            [Player(2), Player(2), Player(0), Player(1), Player(1)],
+            [Player(1), Player(1), Player(1), Player(1), Player(1)],
+            [Player(1), Player(1), Player(1), Player(1), Player(1)]]
 
 
 # On crée le tableau en appelant pour chaque pion la class "Player" avec un numéro définit dans la class pour donner
@@ -84,7 +86,7 @@ def InitBoard():
 
 # ---------------------------------------------------------------------------------------------------------
 
-def move(event: MOUSEMOTION):
+def position(event: MOUSEMOTION):
     for y in range(len(tableau)):
         for x in range(len(tableau[y])):
             if tableau[y][x].rect.collidepoint(event.pos[0], event.pos[1]) is True:
@@ -101,26 +103,20 @@ def move(event: MOUSEMOTION):
 
 # ---------------------------------------------------------------------------------------------------------
 
-def case(player: tuple):
+def case(pion):
+    x= pion[0]
+    y= pion[1]
     voisin = []
     try:
-        if player[0] - 1 >= 0 and tableau[player[0] - 1][player[1]]:
-            voisin.append((player[0] - 1, player[1]))
-        if player[0] + 1 >= 0 and tableau[player[0] + 1][player[1]]:
-            voisin.append((player[0] + 1, player[1]))
-        if player[1] - 1 >= 0 and tableau[player[0]][player[1] - 1]:
-            voisin.append((player[0], player[1] - 1))
-        if player[1] + 1 >= 0 and tableau[player[0]][player[1] + 1]:
-            voisin.append((player[0], player[1] + 1))
-        if (player[0] % 2 != 0 and player[1] % 2 != 0) or (player[0] % 2 == 0 and player[1] % 2 == 0):
-            if player[0] - 1 >= 0 and player[1] - 1 >= 0 and tableau[player[0] - 1][player[1] - 1]:
-                voisin.append((player[0] - 1, player[1] - 1))
-            if player[0] + 1 >= 0 and player[1] + 1 >= 0 and tableau[player[0] + 1][player[1] + 1]:
-                voisin.append((player[0] + 1, player[1] + 1))
-            if player[0] + 1 >= 0 and player[1] - 1 >= 0 and tableau[player[0] + 1][player[1] - 1]:
-                voisin.append((player[0] + 1, player[1] - 1))
-            if player[0] - 1 >= 0 and player[1] + 1 >= 0 and tableau[player[0] - 1][player[1] + 1]:
-                voisin.append((player[0] - 1, player[1] + 1))
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if (x + y) % 2 == 0:
+                    if 0 <= x + i <= len(tableau) - 1 and 0 <= y + j <= len(tableau) - 1 and (i != 0 or j != 0):
+                        voisin.append((x + i, y + j))
+                else:
+                    if 0 <= x + i <= len(tableau) - 1 and 0 <= y + j <= len(tableau) - 1 and (
+                            (x + i == x) != (y + j == y)):
+                        voisin.append((x + i, y + j))
     except IndexError:
         pass
     return voisin
@@ -226,7 +222,7 @@ while continuer:
         if event.type == pygame.QUIT:
             continuer = False
         elif event.type == MOUSEBUTTONDOWN:
-            click = move(event)
+            click = position(event)
             if click is None:
                 break
             if case_nei is None:
@@ -238,13 +234,14 @@ while continuer:
                 if mp is True and secondcapture() is True:
                     tableau[case_nei[0]][case_nei[1]].set(0)
                     tableau[second_nei[0]][second_nei[1]].set(0)
+                    turnplayer = pionadverse()
                 elif mp is True and secondcapture() is False:
                     tableau[second_nei[0]][second_nei[1]].set(turnplayer)
                     tableau[case_nei[0]][case_nei[1]].set(0)
+                    turnplayer = pionadverse()
                 if mp is False and capture(case_nei, second_nei) is not None:
                     capturer(case_nei, second_nei, capture(case_nei, second_nei))
-
-                turnplayer = pionadverse()
+                    turnplayer = pionadverse()
 
                 case_nei, second_nei = None, None
 
