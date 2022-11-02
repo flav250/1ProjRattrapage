@@ -9,12 +9,6 @@ pionN = pygame.image.load("Image/pion1.png")
 pionB = pygame.image.load("Image/pion2.png")
 
 
-# ---------------------------------------------------------------------------------------------------------
-
-# La class
-
-# ---------------------------------------------------------------------------------------------------------
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, player):
         super().__init__()
@@ -37,192 +31,113 @@ class Player(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(pygame.image.load("Image/pion2.png"), (60, 60))
 
 
-# Cette class va permettre de définir les pions avec la couleur noir et blanc
-# Un pion qui égale à 0 c'est un pion invisible qui sera cliquable pour nous aider au déplacement
+class fonctiongame:
 
-# ---------------------------------------------------------------------------------------------------------
+    def __init__(self):
+        self.tableau = [[Player(2), Player(2), Player(2), Player(2), Player(2)],
+           [Player(2), Player(2), Player(2), Player(2), Player(2)],
+           [Player(2), Player(2), Player(0), Player(1), Player(1)],
+           [Player(1), Player(1), Player(1), Player(1), Player(1)],
+           [Player(1), Player(1), Player(1), Player(1), Player(1)]]
 
-# Tableau
+    def getTableau(self):
+        return self.tableau
 
-# ---------------------------------------------------------------------------------------------------------
+    def InitBoard(self):
+        board = pygame.image.load("Image/alquerque1.png")
+        board_rect = board.get_rect(center=(300, 298.5))
+        game.blit(board, board_rect)
 
-tableau = [[Player(2), Player(2), Player(2), Player(2), Player(2)],
-            [Player(2), Player(2), Player(2), Player(2), Player(2)],
-            [Player(2), Player(2), Player(0), Player(1), Player(1)],
-            [Player(1), Player(1), Player(1), Player(1), Player(1)],
-            [Player(1), Player(1), Player(1), Player(1), Player(1)]]
+        for i in range(len(self.tableau)):
+            for j in range(len(self.tableau[i])):
+                if self.tableau[i][j].image is not None:
+                    self.tableau[i][j].rect = self.tableau[i][j].image.get_rect(center=(122 * (j + 0.46), 122 * (i + 0.47)))
+                    if self.tableau[i][j].player != 0:
+                        game.blit(self.tableau[i][j].image, self.tableau[i][j].rect)
+        pygame.display.flip()
 
+    def position(self,event: MOUSEMOTION):
+        for y in range(len(self.tableau)):
+            for x in range(len(self.tableau[y])):
+                if self.tableau[y][x].rect.collidepoint(event.pos[0], event.pos[1]) is True:
+                    return y, x
+        return None
 
-# On crée le tableau en appelant pour chaque pion la class "Player" avec un numéro définit dans la class pour donner
-# la couluer des pions
+    def case(self, pion):
+        x = pion[0]
+        y = pion[1]
+        voisin = []
+        try:
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if (x + y) % 2 == 0:
+                        if 0 <= x + i <= len(self.tableau) - 1 and 0 <= y + j <= len(self.tableau) - 1 and (i != 0 or j != 0):
+                            voisin.append((x + i, y + j))
+                    else:
+                        if 0 <= x + i <= len(self.tableau) - 1 and 0 <= y + j <= len(self.tableau) - 1 and (
+                                (x + i == x) != (y + j == y)):
+                            voisin.append((x + i, y + j))
+        except IndexError:
+            pass
+        return voisin
 
-# ---------------------------------------------------------------------------------------------------------
+    def movepos(self, pion1: tuple, pion2: tuple):
+        if pion2 in self.case(pion1) and self.tableau[pion2[0]][pion2[1]].player == 0 and self.tableau[pion1[0]][
+            pion1[1]].player == turnplayer:
+            return True
+        else:
+            return False
 
-# Placement des pions
+    def capture(self, pion1: tuple, pion2: tuple):
+        for items in self.case(pion1):
+            if self.tableau[pion1[0]][pion1[1]].player == turnplayer and self.tableau[pion2[0]][
+                pion2[1]].player == 0 and items in self.case(pion2) and self.tableau[items[0]][
+                items[1]].player == self.pionadverse() and (
+                    (((pion1[0] + pion2[0]) / 2, (pion1[1] + pion2[1]) / 2) == items) or (
+                    pion1[0] == pion2[0] == items[0] or pion1[1] == pion2[1] == items[1])):
+                return items
+        return None
 
-# ---------------------------------------------------------------------------------------------------------
+    def capturer(self, pion1: tuple, pion2: tuple, pion3: tuple):
+        self.tableau[pion1[0]][pion1[1]].set(0)
+        self.tableau[pion2[0]][pion2[1]].set(turnplayer)
+        self.tableau[pion3[0]][pion3[1]].set(0)
 
-def InitBoard():
-    board = pygame.image.load("Image/alquerque1.png")
-    board_rect = board.get_rect(center=(300, 298.5))
-    game.blit(board, board_rect)
-
-    for i in range(len(tableau)):
-        for j in range(len(tableau[i])):
-            if tableau[i][j].image is not None:
-                tableau[i][j].rect = tableau[i][j].image.get_rect(center=(122 * (j + 0.46), 122 * (i + 0.47)))
-                if tableau[i][j].player != 0:
-                    game.blit(tableau[i][j].image, tableau[i][j].rect)
-    pygame.display.flip()
-
-
-# InitBoard permet de placer les pions sur le plateau en créant une doule iste à parcourir le tableau pour placer les
-# pions
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Test de click sur un pion
-
-# ---------------------------------------------------------------------------------------------------------
-
-def position(event: MOUSEMOTION):
-    for y in range(len(tableau)):
-        for x in range(len(tableau[y])):
-            if tableau[y][x].rect.collidepoint(event.pos[0], event.pos[1]) is True:
-                return y, x
-    return None
-
-
-# Cette fonction va donner les coordonnées de chaque pion quand on clique dessus qui va nous aider pour le déplacement
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Mouvement des pions
-
-# ---------------------------------------------------------------------------------------------------------
-
-def case(pion):
-    x= pion[0]
-    y= pion[1]
-    voisin = []
-    try:
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if (x + y) % 2 == 0:
-                    if 0 <= x + i <= len(tableau) - 1 and 0 <= y + j <= len(tableau) - 1 and (i != 0 or j != 0):
-                        voisin.append((x + i, y + j))
-                else:
-                    if 0 <= x + i <= len(tableau) - 1 and 0 <= y + j <= len(tableau) - 1 and (
-                            (x + i == x) != (y + j == y)):
-                        voisin.append((x + i, y + j))
-    except IndexError:
-        pass
-    return voisin
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Alternance de joueur
-
-# ---------------------------------------------------------------------------------------------------------
-
-def movepos(pion1: tuple, pion2: tuple):
-    if pion2 in case(pion1) and tableau[pion2[0]][pion2[1]].player == 0 and tableau[pion1[0]][pion1[1]].player == turnplayer:
-        return True
-    else:
+    def secondcapture(self):
+        for i in range(len(self.tableau)):
+            for j in range(len(self.tableau[i])):
+                for k in self.case((i, j)):
+                    for l in self.case((k[0], k[1])):
+                        if self.tableau[i][j].player == turnplayer and l not in self.case((i, j)) and self.capture((i, j),
+                                                                                                              l) is not None:
+                            return True
         return False
 
+    def pionadverse(self):
+        if turnplayer == 1:
+            return 2
+        else:
+            return 1
 
-# ---------------------------------------------------------------------------------------------------------
+    def endgame(self):
+        for i in range(len(self.tableau)):
+            for j in range(len(self.tableau[i])):
+                if self.tableau[i][j].player == turnplayer:
+                    return False
+        return True
 
-# Capture des pions
-
-# ---------------------------------------------------------------------------------------------------------
-
-def capture(pion1: tuple, pion2: tuple):
-    for items in case(pion1):
-        if tableau[pion1[0]][pion1[1]].player == turnplayer and tableau[pion2[0]][
-            pion2[1]].player == 0 and items in case(pion2) and tableau[items[0]][
-            items[1]].player == pionadverse() and (
-                (((pion1[0] + pion2[0]) / 2, (pion1[1] + pion2[1]) / 2) == items) or (
-                pion1[0] == pion2[0] == items[0] or pion1[1] == pion2[1] == items[1])):
-            return items
-    return None
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Changer de pions
-
-# ---------------------------------------------------------------------------------------------------------
-
-def capturer(pion1: tuple, pion2: tuple, pion3: tuple):
-    tableau[pion1[0]][pion1[1]].set(0)
-    tableau[pion2[0]][pion2[1]].set(turnplayer)
-    tableau[pion3[0]][pion3[1]].set(0)
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Tentative de capture
-
-# ---------------------------------------------------------------------------------------------------------
-
-def secondcapture():
-    for i in range(len(tableau)):
-        for j in range(len(tableau[i])):
-            for k in case((i, j)):
-                for l in case((k[0], k[1])):
-                    if tableau[i][j].player == turnplayer and l not in case((i, j)) and capture((i, j), l) is not None:
-                        return True
-    return False
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Alternance de joueur
-
-# ---------------------------------------------------------------------------------------------------------
-
-def pionadverse():
-    if turnplayer == 1:
-        return 2
-    else:
-        return 1
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# fin de jeux
-
-# ---------------------------------------------------------------------------------------------------------
-
-def endgame():
-    for i in range(len(tableau)):
-        for j in range(len(tableau[i])):
-            if tableau[i][j].player == turnplayer:
-                return False
-    return True
-
-
-# ---------------------------------------------------------------------------------------------------------
-
-# Lorque le jeux se lance
-
-# ---------------------------------------------------------------------------------------------------------
 
 continuer = True
 case_nei, second_nei = None, None
 turnplayer = 1
+plateau = fonctiongame()
 while continuer:
-    InitBoard()
+    plateau.InitBoard()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             continuer = False
         elif event.type == MOUSEBUTTONDOWN:
-            click = position(event)
+            click = plateau.position(event)
             if click is None:
                 break
             if case_nei is None:
@@ -230,22 +145,22 @@ while continuer:
             elif case_nei is not None and click != case_nei and second_nei is None:
                 second_nei = click
             if case_nei is not None and second_nei is not None:
-                mp = movepos(case_nei, second_nei)
-                if mp is True and secondcapture() is True:
-                    tableau[case_nei[0]][case_nei[1]].set(0)
-                    tableau[second_nei[0]][second_nei[1]].set(0)
-                    turnplayer = pionadverse()
-                elif mp is True and secondcapture() is False:
-                    tableau[second_nei[0]][second_nei[1]].set(turnplayer)
-                    tableau[case_nei[0]][case_nei[1]].set(0)
-                    turnplayer = pionadverse()
-                if mp is False and capture(case_nei, second_nei) is not None:
-                    capturer(case_nei, second_nei, capture(case_nei, second_nei))
-                    turnplayer = pionadverse()
+                mp = plateau.movepos(case_nei, second_nei)
+                if mp is True and plateau.secondcapture() is True:
+                    plateau.getTableau()[case_nei[0]][case_nei[1]].set(0)
+                    plateau.getTableau()[second_nei[0]][second_nei[1]].set(0)
+                    turnplayer = plateau.pionadverse()
+                elif mp is True and plateau.secondcapture() is False:
+                    plateau.getTableau()[second_nei[0]][second_nei[1]].set(turnplayer)
+                    plateau.getTableau()[case_nei[0]][case_nei[1]].set(0)
+                    turnplayer = plateau.pionadverse()
+                if mp is False and plateau.capture(case_nei, second_nei) is not None:
+                    plateau.capturer(case_nei, second_nei, plateau.capture(case_nei, second_nei))
+                    turnplayer = plateau.pionadverse()
 
                 case_nei, second_nei = None, None
 
-            if endgame() is True:
+            if plateau.endgame() is True:
                 tableau = [[Player(2), Player(2), Player(2), Player(2), Player(2)],
                            [Player(2), Player(2), Player(2), Player(2), Player(2)],
                            [Player(2), Player(2), Player(0), Player(1), Player(1)],
